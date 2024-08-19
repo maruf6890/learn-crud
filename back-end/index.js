@@ -1,6 +1,3 @@
-//maruf6890
-//0PVMYoiiLvib2K9L
-
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -31,23 +28,22 @@ async function run() {
     const database = client.db("usersDB");
     const usersCollection = database.collection("users");
 
-
-
-    //get multiple post 
-    app.get('/users',async(req,res)=>{
-      const cursor =usersCollection.find();
-      const result= await cursor.toArray();
+    // Get all users
+    app.get('/users', async (req, res) => {
+      const cursor = usersCollection.find();
+      const result = await cursor.toArray();
       res.send(result);
-    })
-    // get single post 
-    app.get('/users/:id', async(req,res)=>{
-      const id= req.params.id;
-      const query=  {_id: new ObjectId(id)};
-      const result= await usersCollection.findOne(query);
+    });
+
+    // Get a single user by ID
+    app.get('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.findOne(query);
       res.send(result);
-      
-    })
-    // POST endpoint to add a user
+    });
+
+    // Add a new user
     app.post('/users', async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -55,19 +51,40 @@ async function run() {
       res.send(result);
     });
 
-    //delete 
-    app.delete('/users/:id',async(req,res)=>{
-      const id= req.params.id;
-      console.log("please delete ",id)
-      const query=  {_id: new ObjectId(id)}
-      const result= await usersCollection.deleteOne(query);
+    // Update an existing user by ID
+    app.put('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const updatedUser = req.body;
+      console.log("Updated user:", updatedUser);
+
+      const filter = { _id: new ObjectId(id) };
+      const option = { upsert: true };
+      const updateUser = {
+        $set: {
+          name: updatedUser.name,
+          email: updatedUser.email,
+          password: updatedUser.password,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateUser, option);
+      res.send(result); 
+    });
+
+    // Delete a user by ID
+    app.delete('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log("Please delete user with ID:", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
       res.send(result);
+
       if (result.deletedCount === 1) {
         console.log("Successfully deleted one document.");
       } else {
         console.log("No documents matched the query. Deleted 0 documents.");
       }
-    })
+    });
 
     // Confirm successful connection
     await client.db("admin").command({ ping: 1 });
